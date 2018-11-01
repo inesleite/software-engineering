@@ -1,0 +1,95 @@
+package pt.ulisboa.tecnico.softeng.hotel.domain;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import org.joda.time.LocalDate;
+
+import pt.ulisboa.tecnico.softeng.hotel.exception.HotelException;
+
+public class Hotel {
+	public static Set<Hotel> hotels = new HashSet<>();
+
+	static final int CODE_SIZE = 7;
+
+	private final String code;
+	private final String name;
+	private final Set<Room> rooms = new HashSet<>();
+
+	public Hotel(String code, String name) {
+		checkCode(code);
+		checkName(name);
+		this.code = code;
+		this.name = name;
+		Hotel.hotels.add(this);
+	}
+	private void checkName(String name){
+		if (name==null || name=="")
+			throw new HotelException("Argumentos null \nclasse: Hotel \nmétodo: checkName\n");
+	}
+	private void checkCode(String code) {
+		if ((code==null) || (code.length() != Hotel.CODE_SIZE)) {
+			throw new HotelException("Argumentos null \nclasse: Hotel \nmétodo: checkCode\n");
+		}
+		for(Hotel h : hotels){
+			if(h.getCode().equals(code)){
+				throw new HotelException("Hotel existente!");
+			}
+		}
+	}
+
+	public Room hasVacancy(Room.Type type, LocalDate arrival, LocalDate departure) {
+		if (type == null || arrival == null || departure == null){
+			throw new HotelException("Argumentos null \nclasse: Hotel \nmétodo: hasVacancy\n");
+		}
+		for (Room room : this.rooms) {
+			if (room.isFree(type, arrival, departure)) {
+				return room;
+			}
+		}
+		return null;
+	}
+
+	String getCode() {
+		return this.code;
+	}
+	public boolean roomExistence(String number){
+		for(Room r : rooms){
+			if(r.getNumber().equals(number)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	String getName() {
+		return this.name;
+	}
+	public Set<Room> getRooms() {
+		return this.rooms;
+	}
+	void addRoom(Room room) {
+
+		if(roomExistence(room.getNumber())){
+			throw new HotelException("Quarto existente!");
+		}
+		this.rooms.add(room);
+	}
+
+	int getNumberOfRooms() {
+		return this.rooms.size();
+	}
+
+	public static String reserveHotel(Room.Type type, LocalDate arrival, LocalDate departure) {
+		if(type==null || arrival==null || departure==null)
+			throw new HotelException("Argumentos null \nclasse: Hotel \nmétodo: reserveHotel\n");
+		for (Hotel hotel : Hotel.hotels) {
+			Room room = hotel.hasVacancy(type, arrival, departure);
+			if (room != null) {
+				return room.reserve(type, arrival, departure).getReference();
+			}
+		}
+		return null;
+	}
+
+}
